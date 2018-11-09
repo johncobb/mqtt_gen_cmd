@@ -1,0 +1,71 @@
+
+pi@raspberrypi:~ $ cu -l /dev/ttyUSB1 -s 115200
+Connected.
+at
+OK
+
+AT+USECMNG=0,0,"ROOT_CERT",1733
+-----END CERTIFICATE-----FzyQkqFOFSDX9HoLPKsEdao7WNqcbidJ4vEZV8N
+ME ERROR: USECMNG invalid certificate/key format
+
+AT+USECMNG=0,0,"ROOT_CERT",1731
+-----END CERTIFICATE-----FzyQkqFOFSDX9HoLPKsEdao7WNqcbidJ4vEZV8N
++USECMNG: 0,0,"ROOT_CERT","CB17E431673EE209FE455793F30AFA1C"
+
+OK
+AT+USECPRF=0,3,"ROOT"C
+OK
+AT+USECPRF=0,3,"ROOT_CERT"
+OK
+at+usecmng=0,1,"CLIENT_CERT",1219
+-----END CERTIFICATE-----V+LSPT+jnf0c59i4PvEHyk+2O6woz7pyZVth4hu
++USECMNG: 0,1,"CLIENT_CERT","A27AD49E7BD1D3C2161821EB9CD0B440"
+
+OK
+AT+USECPRF=0,5,"CLIENT_CERT"
+OK
+at+usecmng=0,2,"PRIVATE_KEY",1674
+-----END RSA PRIVATE KEY-----HY1+d7PcVYLv9l7os55wlJOB8ONuX5PYBB3
++USECMNG: 0,2,"PRIVATE_KEY","3BD096E5BA79E30DE1C6D8985CCA3B77"
+
+OK
+AT+USECPRF=0,6,"PRIVATE_KEY"
+OK
+AT+USECPRF=0,0,1
+OK
+AT+USECPRF=0,1,3
+OK
+AT+USECPRF=0,2,0
+OK
+AT+USOCR=6
++USOCR: 0
+
+# enable hex mode on socket
+at+udconf=1,1
+OK
+
+# example: close socket 0
+at+usocl=0
+OK
+# example: close socket 1
+at+usocl=1
+OK
+
+# example: open next available socket
+at+usocr=6
++USOCR: 0
+
+at+usocr=6
++USOCR: 0
+
+OK
+
+# example: open socket connection
+AT+USOCO=0,"ah2fpu2q2t4m4-ats.iot.us-east-1.amazonaws.com",8883
+OK
+
+# example: socket write
+AT+USOWR=0,17,"300F000B637068742F6C69676874736F6E"
++USOWR: 0,17
+
+
