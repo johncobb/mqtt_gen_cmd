@@ -64,6 +64,16 @@ OK
 AT+USOCO=0,"ah2fpu2q2t4m4-ats.iot.us-east-1.amazonaws.com",8883
 OK
 
+# example: initiate mqtt connection
+#                cnx  length  prtcl-nm-len  M Q T T  ptcl-lvl  cnx-flg  kp-alv  client-id-len  a  r  d  u  i  n  o
+# AT+USOWR=0,21,"10   13      0004          4D515454 04        02       000F    0007           61 72 64 75 69 6E 6F"
+AT+USOWR=0,21,"101300044D5154540402000F000761726475696E6F"
++USOWR: 0,21
+
+OK
+
++UUSOCL: 0 # --> if you get this then the server disonnocted the socket
+
 # example: socket write
 AT+USOWR=0,17,"300F000B637068742F6C69676874736F6E"
 +USOWR: 0,17

@@ -3,9 +3,23 @@
 #include <string>
 #include <sstream>
 
-
 using namespace std;
+
+
+
+#define MQTT_VERSION_3_1      3
+#define MQTT_VERSION_3_1_1    4
+
+#define MQTT_HEADER_VERSION_LENGTH 7
+
+// MQTT_VERSION : Pick the version
+//#define MQTT_VERSION MQTT_VERSION_3_1
+#ifndef MQTT_VERSION
+#define MQTT_VERSION MQTT_VERSION_3_1_1
+#endif
 #define MQTT_MAX_PACKET_SIZE 128
+#define MQTT_KEEPALIVE 15
+#define MQTT_SOCKET_TIMEOUT 15
 #define MQTT_MAX_HEADER_SIZE 5
 
 #define MQTTCONNECT     1 << 4  // Client request to connect to Server
@@ -29,7 +43,6 @@ uint8_t buffer[MQTT_MAX_PACKET_SIZE];
 
 const char topic[] = "$aws/things/arduino/update";
 // const char topic[] = "cpht/lights";
-
 
 template<typename T>
 string ToString(T t) {
@@ -174,7 +187,11 @@ uint16_t writeString(const char* string, uint8_t* buf, uint16_t pos) {
 }
 
 
-// 3037001A246177732F7468696E67732F61726475696E6F2F7570646174657B643A207B207374617475733A2022636F6E6E656374656421227D
+// AT+USOWR=0,21,"101300044D5154540402000F000761726475696E6F"
+// AT+USOWR=0,57,"3037001A246177732F7468696E67732F61726475696E6F2F7570646174657B643A207B207374617475733A2022636F6E6E656374656421227D"
+
+//                connect  length  ptcl-nm-len  M Q T T  ptcl-lvl  cnx-flg  kp-alv  client-id-len  a  r  d  u  i  n  o
+// AT+USOWR=0,21,"10       13      0004         4D515454 04        02       000F    0007           61 72 64 75 69 6E 6F"
 bool publish(const char* topic, const uint8_t* payload, unsigned int plength, bool retained) {
     if (MQTT_MAX_PACKET_SIZE < 5 + 2+strlen(topic) + plength) {
         // Too long
@@ -203,6 +220,61 @@ bool publish(const char* topic, const uint8_t* payload, unsigned int plength, bo
     return writeMQTT(header,buffer,length-5);
 }
 
+
+bool connect(const char *id, const char *user, const char *pass, const char* willTopic, uint8_t willQos, bool willRetain, const char* willMessage) {
+
+    uint8_t d[7] = {0x00, 0x04, 'M', 'Q', 'T', 'T', MQTT_VERSION};
+    // Leave room in the buffer for header and variable length field
+    uint16_t length = 5;
+    unsigned int j;
+
+    for (j=0; j< MQTT_HEADER_VERSION_LENGTH; j++) {
+        buffer[length++] = d[j];
+    }
+
+    uint8_t v;
+
+    if (willTopic) {
+        v = 0x06|(willQos<<3)|(willRetain<<5);
+    } else {
+        v = 0x02;
+    }
+
+    if (user != NULL) {
+        v = v|0x80;
+
+        if (pass != NULL) {
+            v = v|(0x80>>1);
+        }
+    }
+
+    buffer[length++] = v;
+    buffer[length++] = ((MQTT_KEEPALIVE) >> 8);
+    buffer[length++] = ((MQTT_KEEPALIVE) & 0xFF);
+
+    length = writeString(id, buffer, length);
+
+    if (willTopic) {
+        length = writeString(willTopic, buffer, length);
+        length = writeString(willMessage, buffer, length);
+    }
+
+    if (user != NULL) {
+        length = writeString(user, buffer, length);
+        if (pass != NULL) {
+            length = writeString(pass, buffer, length);
+        }
+    }
+
+    writeMQTT(MQTTCONNECT,buffer,length-5);
+
+    return true;
+}
+
+bool connect(const char *id) {
+    return connect(id,NULL,NULL,0,0,0,0);
+}
+
 bool publish(const char* topic, const uint8_t* payload, unsigned int plength) {
     return publish(topic, payload, plength, false);
 }
@@ -219,6 +291,8 @@ int main(int argc, char** argv)
 {
 
     publish(topic, "{d: { status: \"connected!\"}");
+    connect("arduino");
+    cout << endl;
     // publish(topic, "on");
     return 0;
 }
